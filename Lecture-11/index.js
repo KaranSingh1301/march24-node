@@ -232,13 +232,27 @@ app.post("/create-item", isAuth, async (req, res) => {
 });
 
 //read todo
+
+// /read-item?skip=10
 app.get("/read-item", isAuth, async (req, res) => {
   const username = req.session.user.username;
-  try {
-    const todoDb = await todoModel.find({ username: username });
-    console.log(todoDb);
+  const SKIP = Number(req.query.skip) || 0;
+  const LIMIT = 3;
 
-    if (todoDb.length === 0) {
+  try {
+    //mongodb aggregate
+    const todoDb = await todoModel.aggregate([
+      { $match: { username: username } },
+      {
+        $facet: {
+          data: [{ $skip: SKIP }, { $limit: LIMIT }],
+        },
+      },
+    ]);
+
+    console.log(todoDb[0].data);
+
+    if (todoDb[0].data.length === 0) {
       return res.send({
         status: 400,
         message: "No Todo Found",
@@ -249,7 +263,7 @@ app.get("/read-item", isAuth, async (req, res) => {
     return res.send({
       status: 200,
       message: "Read success",
-      data: todoDb,
+      data: todoDb[0].data,
     });
   } catch (error) {
     return res.send({

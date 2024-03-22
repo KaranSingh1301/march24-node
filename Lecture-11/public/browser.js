@@ -1,8 +1,10 @@
+let skip = 0;
 window.onload = genrateTodos;
 
 function genrateTodos() {
+  console.log(skip);
   axios
-    .get("/read-item")
+    .get(`/read-item?skip=${skip}`)
     .then((res) => {
       console.log(res.data);
       if (res.data.status !== 200) {
@@ -11,8 +13,9 @@ function genrateTodos() {
       }
 
       const todos = res.data.data;
+      skip += todos.length;
       console.log(todos);
-
+      console.log(skip);
       document.getElementById("item_list").insertAdjacentHTML(
         "beforeend",
         todos
@@ -109,6 +112,8 @@ document.addEventListener("click", function (event) {
         );
       })
       .catch((err) => console.log(err));
+  } else if (event.target.classList.contains("show_more")) {
+    genrateTodos();
   }
 });
 
